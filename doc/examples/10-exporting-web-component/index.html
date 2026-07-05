@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Exporting a Web Component — ctrl-fx examples</title>
+    <link rel="stylesheet" href="/shared/frame.css" />
+  </head>
+  <body>
+    <div id="frame">
+      <header>
+        <a href="/">← examples</a>
+        <h1>Exporting a Web Component</h1>
+      </header>
+      <div id="panels">
+        <div id="preview">
+          <div id="app">
+            <ctrl-counter></ctrl-counter>
+            <p id="log">Last event: —</p>
+          </div>
+        </div>
+        <div id="source"></div>
+      </div>
+    </div>
+    <script type="module" src="./main.ts"></script>
+    <script type="module">
+      document.querySelector('ctrl-counter')
+        .addEventListener('count-changed', e => {
+          document.getElementById('log').textContent = `Last event: count is ${e.detail.count}`
+        })
+    </script>
+    <script type="module">
+      import component from './component.ts?raw'
+      import main from './main.ts?raw'
+      import test from './app.test.ts?raw'
+      import { showTabs } from '/shared/tabs.ts'
+      showTabs([
+        { label: 'component.ts', source: component },
+        { label: 'main.ts', source: main },
+        { label: 'app.test.ts', source: test },
+      ])
+    </script>
+  </body>
+</html>

@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "target": "ES2021",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "paths": {
+      "ctrl-fx": ["./src/index.ts"],
+      "ctrl-fx/db": ["./src/db/index.ts"],
+      "ctrl-fx/dom": ["./src/dom/index.ts"],
+      "ctrl-fx/effects": ["./src/effects.ts"],
+      "ctrl-fx/router": ["./src/router.ts"],
+      "ctrl-fx/testing": ["./src/testing.ts"],
+      "ctrl-fx/webcomponent": ["./src/webcomponent.ts"]
+    },
+    "lib": ["ES2021", "DOM", "DOM.Iterable"],
+    "strict": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noFallthroughCasesInSwitch": true,
+    "useDefineForClassFields": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "erasableSyntaxOnly": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src", "doc/examples"]
+}

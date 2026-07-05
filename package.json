@@ -1,0 +1,87 @@
+{
+  "name": "ctrl-fx",
+  "version": "0.0.1",
+  "description": "A no-dependency, purely functional TypeScript framework for building web applications",
+  "type": "module",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chris24carroll/ctrl-fx.git"
+  },
+  "keywords": [
+    "framework",
+    "functional",
+    "typescript",
+    "virtual-dom",
+    "effects",
+    "web",
+    "spa",
+    "frontend",
+    "component",
+    "state-management"
+  ],
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "vite --host",
+    "clean": "rm -rf dist",
+    "build": "tsc && vite build --config doc/examples/vite.config.ts doc/examples",
+    "build:lib": "tsc -p tsconfig.build.json",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest --coverage",
+    "deploy": "./tools/archive.sh && ./tools/deploy.sh",
+    "format": "prettier --write src",
+    "format:check": "prettier --check src",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "typecheck": "tsc --noEmit",
+    "examples": "vite doc/examples --open",
+    "docs": "typedoc --entryPoints src/index.ts src/effects.ts src/testing.ts src/dom/index.ts src/dom/components.ts src/db/index.ts src/db/errors.ts src/router.ts src/webcomponent.ts src/utils/result.ts src/utils/lens.ts src/utils/match.ts --tsconfig tsconfig.json",
+    "prepublishOnly": "npm run build:lib"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./db": {
+      "types": "./dist/db/index.d.ts",
+      "import": "./dist/db/index.js"
+    },
+    "./dom": {
+      "types": "./dist/dom/index.d.ts",
+      "import": "./dist/dom/index.js"
+    },
+    "./effects": {
+      "types": "./dist/effects.d.ts",
+      "import": "./dist/effects.js"
+    },
+    "./testing": {
+      "types": "./dist/testing.d.ts",
+      "import": "./dist/testing.js"
+    },
+    "./router": {
+      "types": "./dist/router.d.ts",
+      "import": "./dist/router.js"
+    },
+    "./webcomponent": {
+      "types": "./dist/webcomponent.d.ts",
+      "import": "./dist/webcomponent.js"
+    }
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "typedoc": "^0.28.19",
+    "eslint": "^10.4.1",
+    "highlight.js": "^11.11.1",
+    "prettier": "^3.8.3",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.20.6",
+    "typescript": "~5.8.3",
+    "typescript-eslint": "^8.60.0",
+    "vitest": "^3.2.4"
+  }
+}

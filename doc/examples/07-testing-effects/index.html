@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Custom Effects — ctrl-fx examples</title>
+    <link rel="stylesheet" href="/shared/frame.css" />
+  </head>
+  <body>
+    <div id="frame">
+      <header>
+        <a href="/">← examples</a>
+        <h1>Custom Effects</h1>
+      </header>
+      <div id="panels">
+        <div id="preview">
+          <div id="app"></div>
+        </div>
+        <div id="source"></div>
+      </div>
+    </div>
+    <script type="module" src="./main.ts"></script>
+    <script type="module">
+      import app from './app.ts?raw'
+      import test from './app.test.ts?raw'
+      import main from './main.ts?raw'
+      import { showTabs } from '/shared/tabs.ts'
+      showTabs([
+        { label: 'app.ts', source: app },
+        { label: 'app.test.ts', source: test },
+        { label: 'main.ts', source: main },
+      ])
+    </script>
+  </body>
+</html>
