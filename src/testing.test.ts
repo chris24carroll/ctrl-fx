@@ -242,15 +242,6 @@ describe('onSubmit / submit interaction', () => {
   type FormState = { submitted: boolean; value: string }
   const dom = makeDom<FormState, never>()
 
-  const formView = (state: FormState) =>
-    dom.form()(
-      dom.input().onTextInput(t =>
-        updateState<FormState, never>(s => ({ ...s, value: t.value })),
-      ),
-      dom.button()('Submit'),
-      ...(state.submitted ? [dom.p()('done')] : []),
-    )
-
   it('onSubmit fires and updates state', () => {
     const view = (_state: FormState) =>
       dom

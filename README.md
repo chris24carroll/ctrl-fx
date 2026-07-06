@@ -106,7 +106,20 @@ describe('shows alert', () => {
 })
 ```
 
+## Quick start
+
+Scaffold a new project with a single command:
+
+```
+npx tiged chris24carroll/ctrl-fx-template my-app
+cd my-app
+npm install
+npm run dev
+```
+
 ## Installation
+
+To add ctrl-fx to an existing project:
 
 ```sh
 npm install ctrl-fx

@@ -1,6 +1,6 @@
 {
   "name": "ctrl-fx",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A no-dependency, purely functional TypeScript framework for building web applications",
   "type": "module",
   "license": "Apache-2.0",
@@ -27,7 +27,7 @@
     "dev": "vite --host",
     "clean": "rm -rf dist",
     "build": "tsc && vite build --config doc/examples/vite.config.ts doc/examples",
-    "build:lib": "tsc -p tsconfig.build.json",
+    "build:lib": "tsup",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest --watch",
@@ -74,12 +74,13 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "typedoc": "^0.28.19",
     "eslint": "^10.4.1",
     "highlight.js": "^11.11.1",
     "prettier": "^3.8.3",
     "ts-node": "^10.9.2",
+    "tsup": "^8.5.1",
     "tsx": "^4.20.6",
+    "typedoc": "^0.28.19",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.60.0",
     "vitest": "^3.2.4"
