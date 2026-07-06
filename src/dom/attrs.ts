@@ -89,66 +89,82 @@ export function id(value: string): Attr {
   return attr('id', value)
 }
 
+/** Shorthand for `attr('width', value)`. */
 export function width(value: string): Attr {
   return attr('width', value)
 }
 
+/** Shorthand for `attr('height', value)`. */
 export function height(value: string): Attr {
   return attr('height', value)
 }
 
+/** Shorthand for `attr('transform', value)`. */
 export function transform(value: string): Attr {
   return attr('transform', value)
 }
 
+/** Shorthand for `attr('viewBox', value)`. */
 export function viewBox(value: string): Attr {
   return attr('viewBox', value)
 }
 
+/** Shorthand for `attr('fill', value)`. */
 export function fill(value: string): Attr {
   return attr('fill', value)
 }
 
+/** Shorthand for `attr('focusable', value)`. */
 export function focusable(value: string): Attr {
   return attr('focusable', value)
 }
 
+/** Shorthand for `attr('xmlns', value)`. */
 export function xmlns(value: string): Attr {
   return attr('xmlns', value)
 }
 
+/** Shorthand for `attr('d', value)`. */
 export function d(value: string): Attr {
   return attr('d', value)
 }
 
+/** Shorthand for `attr('stroke', value)`. */
 export function stroke(value: string): Attr {
   return attr('stroke', value)
 }
 
+/** Shorthand for `attr('stroke-width', value)`. */
 export function strokeWidth(value: string): Attr {
   return attr('stroke-width', value)
 }
 
+/** Shorthand for `attr('stroke-linecap', value)`. */
 export function strokeLinecap(value: string): Attr {
   return attr('stroke-linecap', value)
 }
 
+/** Shorthand for `attr('stroke-linejoin', value)`. */
 export function strokeLinejoin(value: string): Attr {
   return attr('stroke-linejoin', value)
 }
 
+/** Shorthand for `attr('cx', value)`. */
 export function cx(value: string): Attr {
   return attr('cx', value)
 }
 
+/** Shorthand for `attr('cy', value)`. */
 export function cy(value: string): Attr {
   return attr('cy', value)
 }
 
+/** Shorthand for `attr('r', value)`. */
 export function r(value: string): Attr {
   return attr('r', value)
 }
 
+/** Shorthand for `attr('role', value)`. */
 export function role(value: string): Attr {
   return attr('role', value)
 }
