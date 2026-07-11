@@ -42,6 +42,13 @@ abstract class Node {
   insertBefore(node: Node | string): Node {
     const newNode = typeof node === 'string' ? new TextNode(node) : node
 
+    // If newNode is already attached elsewhere in the tree (e.g. being moved
+    // to a new position within the same parent, as when reordering siblings
+    // with stable identity), detach it first. Otherwise the node it used to
+    // point to is left with a stale sibling pointer back to it, corrupting
+    // the sibling chain into a cycle.
+    newNode.remove()
+
     if (this.previousSibling) {
       this.previousSibling.nextSibling = newNode
       newNode.previousSibling = this.previousSibling
@@ -59,6 +66,10 @@ abstract class Node {
 
   insertAfter(node: Node | string): Node {
     const newNode = typeof node === 'string' ? new TextNode(node) : node
+
+    // See insertBefore: detach first so moving an already-attached node
+    // doesn't leave a stale sibling pointer at its old position.
+    newNode.remove()
 
     if (this.nextSibling) {
       this.nextSibling.previousSibling = newNode
@@ -711,6 +722,12 @@ class TestableComponentImpl<
   private readonly _component: Component<State, Params, Event>
   readonly state: State
   private readonly _window: Window
+  // Component paths already mounted by a previous ComponentManager in this
+  // chain of .run() calls. Each .run() mounts a fresh ComponentManager (the
+  // DOM/scheduler/subscriptions don't persist), so without this, onRender
+  // effects would fire again on every chained .run() even though, from the
+  // test's perspective, the component was already mounted.
+  private readonly _mountedPaths: ReadonlySet<string>
 
   constructor(
     component: Component<State, Params, Event>,
@@ -719,6 +736,7 @@ class TestableComponentImpl<
     data: TestData<Custom>,
     dom: TestableDom,
     window: Window,
+    mountedPaths: ReadonlySet<string>,
   ) {
     this._component = component
     this.state = state
@@ -726,6 +744,7 @@ class TestableComponentImpl<
     this.data = data
     this.dom = dom
     this._window = window
+    this._mountedPaths = mountedPaths
   }
 
   withConfig(
@@ -738,6 +757,7 @@ class TestableComponentImpl<
       this.data,
       this.dom,
       this._window,
+      this._mountedPaths,
     )
   }
 
@@ -751,6 +771,7 @@ class TestableComponentImpl<
       data,
       this.dom,
       this._window,
+      this._mountedPaths,
     )
   }
 
@@ -777,6 +798,8 @@ class TestableComponentImpl<
       win as unknown as RealWindow,
       interpreter,
       noopStyleRegistry(),
+      undefined,
+      this._mountedPaths,
     )
 
     for (const interaction of interactions) {
@@ -866,6 +889,7 @@ class TestableComponentImpl<
       getData(),
       serializeDom(win.document),
       win,
+      mgr.getMountedPaths(),
     )
   }
 
@@ -937,6 +961,7 @@ export function testableComponent<State, Params, Event, Custom = {}>(
     getData(),
     serializeDom(win.document),
     win,
+    mgr.getMountedPaths(),
   )
 }
 

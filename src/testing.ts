@@ -7,21 +7,22 @@ import { type NodeGroup } from './dom/views'
 import { type Effect, type ScrollOptions } from './effects'
 import { testComponent as internalTestcomponent } from './internal'
 import {
+  ResponseBody,
   type HttpError,
   type HttpRequest,
   type HttpResponse,
   type RequestError,
 } from './net'
-import { type Result } from './utils/result'
+import { failure, success, type Result } from './utils/result'
 import { TestDatabaseData } from './db/testdb'
 import type { DbStoreSnapshot } from './db/testdb'
 import type { InternalLocation } from './net/location'
 
-export { TestDatabaseData }
+export { TestDatabaseData, ResponseBody, success, failure }
 export type { DbStoreSnapshot }
 export type { InternalLocation }
 
-export type { HttpRequest, HttpResponse, HttpError, RequestError }
+export type { HttpRequest, HttpResponse, HttpError, RequestError, Result }
 
 export type DownloadRecord = {
   readonly filename: string

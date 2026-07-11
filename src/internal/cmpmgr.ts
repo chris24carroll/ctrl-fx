@@ -26,9 +26,8 @@ import {
   type InternalNode,
   type ParentNode,
   type RootNode,
+  type ViewNode,
 } from "./vdom";
-
-let mountCount = 0
 
 export function manageComponent<State, Params, Event>(
   component: Component<State, Params, Event>,
@@ -67,7 +66,22 @@ export class ComponentManager {
     [key: string]: ComponentNode;
   } = {};
 
+  // Mirrors `components` but for view()/fixedView() subtrees, which have no
+  // state of their own but still need stable identity so their onRender
+  // effects don't refire whenever an ancestor element is rebuilt (or, via
+  // alreadyMountedPaths, whenever a fresh ComponentManager remounts them).
+  // Keyed the same way as components: nodeId + enclosing *component* path
+  // (nesting through another view doesn't add a path segment).
+  private views: {
+    [key: string]: ViewNode;
+  } = {};
+
   private addedComponents: ComponentPath[] = [];
+
+  private pendingRenderEffects: {
+    path: ComponentPath;
+    effects: readonly Effect<unknown, unknown, void>[];
+  }[] = [];
 
   private interpreter: Interpreter;
 
@@ -80,6 +94,14 @@ export class ComponentManager {
 
   private onRootEvent: ((event: unknown) => void) | undefined;
 
+  // Paths that were already mounted (and had their onRender effects fired)
+  // by some earlier, unrelated ComponentManager instance -- e.g. a prior
+  // `.run()` call in ctrl-fx/testing, which mounts a fresh ComponentManager
+  // each time but wants onRender to still behave as if the component tree
+  // had persisted. Suppresses re-queueing onRender effects for those paths
+  // without affecting real first-time mounts.
+  private alreadyMountedPaths: ReadonlySet<string>;
+
   constructor(
     component: Component<unknown, unknown, unknown>,
     mountNode: RealElement,
@@ -87,12 +109,14 @@ export class ComponentManager {
     interpreter: Interpreter,
     styleRegistry: StyleRegistry,
     onRootEvent?: (event: unknown) => void,
+    alreadyMountedPaths?: ReadonlySet<string>,
   ) {
     this.window = window;
     this.document = this.window.document;
     this.interpreter = interpreter;
     this.styleRegistry = styleRegistry;
     this.onRootEvent = onRootEvent;
+    this.alreadyMountedPaths = alreadyMountedPaths ?? new Set();
 
     this.eventManager = new EventManager(
       this.window,
@@ -104,7 +128,7 @@ export class ComponentManager {
       },
     );
 
-    const rootCompPath = componentPath(nodeId(`__root_component:${++mountCount}`));
+    const rootCompPath = componentPath(nodeId("__root_component"));
     this.rootCompPath = rootCompPath;
 
     const compNode = componentNode(component, rootCompPath.nodeId);
@@ -140,6 +164,14 @@ export class ComponentManager {
         _type: "Uninitialized",
       }
     );
+  }
+
+  /** Paths of components (past their initial render) and views currently mounted. */
+  getMountedPaths(): ReadonlySet<string> {
+    const componentPaths = Object.entries(this.components)
+      .filter(([, node]) => node.state._type === "Ready")
+      .map(([path]) => path);
+    return new Set([...componentPaths, ...Object.keys(this.views)]);
   }
 
   dispatchEffect(effect: Effect<unknown, unknown, void>): void {
@@ -199,12 +231,22 @@ export class ComponentManager {
       return;
     }
 
+    const isInitialMount = component.state._type === "Uninitialized";
+    const wasAlreadyMounted = this.alreadyMountedPaths.has(componentPath.format());
+
     component.state = { _type: "Ready", value: state };
 
     const newNodeGroup = component.component.view(
       state,
       component.component.params,
     );
+
+    if (isInitialMount && !wasAlreadyMounted && newNodeGroup.renderEffects.length > 0) {
+      this.pendingRenderEffects.push({
+        path: componentPath,
+        effects: newNodeGroup.renderEffects,
+      });
+    }
 
     component.containerListeners = newNodeGroup.containerListeners;
 
@@ -228,6 +270,16 @@ export class ComponentManager {
           this.renderComponent(childPath, state);
         });
       }
+    });
+
+    // Flush render effects queued for this render pass (this component's own
+    // onRender effects, plus any from views newly mounted directly within it)
+    // now that the DOM for the whole pass has been built. Deferred rather than
+    // run inline during diffing, since an effect could synchronously trigger
+    // another render of a component whose vdom tree is still being traversed.
+    const pending = this.pendingRenderEffects.splice(0);
+    pending.forEach(({ path, effects }) => {
+      effects.forEach((effect) => this.runEffect(effect, path, () => {}));
     });
   }
 
@@ -300,6 +352,11 @@ export class ComponentManager {
         }
         case "ViewNode": {
           that.eventManager.setContainerListeners(node);
+          const viewPath = componentPath(
+            node.nodeId,
+            ancestorComponentPath,
+          ).format();
+          delete that.views[viewPath];
           return;
         }
         case "ComponentNode": {
@@ -526,6 +583,16 @@ export class ComponentManager {
       },
 
       onView(view) {
+        const viewId = componentPath(view.nodeId, ancestorComponentId).format();
+
+        const existingView = that.views[viewId];
+
+        if (existingView) {
+          detach(existingView);
+          that.compareNodes(existingView, view, ancestorComponentId);
+          return existingView;
+        }
+
         const vNode = viewNode(view);
         const nodeGroup = view.nodes(view.params);
         vNode.params = view.params;
@@ -536,6 +603,13 @@ export class ComponentManager {
           );
         });
         that.eventManager.setContainerListeners(vNode);
+        that.views[viewId] = vNode;
+        if (!that.alreadyMountedPaths.has(viewId) && nodeGroup.renderEffects.length > 0) {
+          that.pendingRenderEffects.push({
+            path: ancestorComponentId,
+            effects: nodeGroup.renderEffects,
+          });
+        }
         return vNode;
       },
 
@@ -631,6 +705,16 @@ export class ComponentManager {
         ];
       if (registeredComponent) {
         return registeredComponent;
+      }
+    }
+
+    if (typeof newNode !== "string" && newNode._type === "View") {
+      const registeredView =
+        this.views[
+          componentPath(newNode.nodeId, ancestorComponentPath).format()
+        ];
+      if (registeredView) {
+        return registeredView;
       }
     }
 

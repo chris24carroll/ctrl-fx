@@ -2,7 +2,7 @@ import { makeHttpRequest, type Effect } from '../effects'
 
 import { failure, success, type Result } from '../utils/result'
 
-export type Method = 'GET' | 'POST' | 'DELETE' | 'PUT' | 'HEAD' | 'OPTIONS'
+export type Method = 'GET' | 'POST' | 'DELETE' | 'PUT' | 'PATCH' | 'HEAD' | 'OPTIONS'
 
 export type HttpRequest = {
   readonly uri: string
@@ -16,6 +16,7 @@ export type Headers = {
 }
 
 export type HttpResponse = {
+  readonly status: number
   readonly headers: Headers
   readonly body: ResponseBody
 }
@@ -62,6 +63,20 @@ export class ResponseBody {
 
   asBlob(): Blob {
     return new Blob([this.data])
+  }
+
+  asArrayBuffer(): ArrayBuffer {
+    return this.data
+  }
+
+  /** Base64-encodes the response body into a `data:` URI. `mimeType` isn't known to `ResponseBody` itself (it's not `data`, it lives on the response's headers) so the caller must supply it. */
+  asDataUri(mimeType: string): string {
+    const bytes = new Uint8Array(this.data)
+    let binary = ''
+    for (let i = 0; i < bytes.length; i++) {
+      binary += String.fromCharCode(bytes[i])
+    }
+    return `data:${mimeType};base64,${btoa(binary)}`
   }
 
   asJson(): Result<Json, DecodingError> {

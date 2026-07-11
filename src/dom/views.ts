@@ -242,7 +242,7 @@ export function fixedView<State, Event>(
   id: NodeId | string,
 ): (
   nodes: NodeGroup<State, Event> | Node<State, Event>,
-) => View<State, void, Event> {
+) => View<State, unknown, Event> {
   return nodes => ({
     _type: 'View',
     nodeId: typeof id === 'string' ? nodeId(id) : id,

@@ -27,12 +27,18 @@ import {
 } from '../effects'
 import { scrollElementError } from '../scroll'
 import type { JsonValue } from '../json'
+import type {
+  HttpError,
+  HttpRequest,
+  HttpResponse,
+  RequestError,
+} from '../net'
 import { emptyLocation, type InternalLocation } from '../net/location'
 import { type TestConfig, type TestData } from '../testing'
 import { exhaustivenessCheck } from '../utils'
 import { run as runDbEffect } from '../db/effects'
 import { run as runDbSetupEffect } from '../db/setup'
-import { failure, success } from '../utils/result'
+import { failure, success, type Result } from '../utils/result'
 import type { Callbacks, Interpreter } from './interpreter'
 import type { RealWindow } from './realdom'
 import { TaskRegistry } from './taskreg'
@@ -183,6 +189,7 @@ class TestScheduler {
     acc: MutableTestData<Custom>,
     broadcastReg: BroadcastChannelRegistry,
     window: RealWindow,
+    config?: TestConfig,
   ): void {
     const targetTime = this.virtualNow + ms
 
@@ -209,6 +216,7 @@ class TestScheduler {
         broadcastReg,
         this,
         window,
+        config,
       )
     }
 
@@ -217,17 +225,22 @@ class TestScheduler {
 }
 
 class BroadcastChannelRegistry {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private channels: Map<string, { handler: (msg: unknown) => Effect<any, any, void>; taskId: TaskId }[]> = new Map()
+  private channels: Map<
+    string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    { handler: (msg: unknown) => Effect<any, any, void>; taskId: TaskId; callbacks: Callbacks<any, any, any> }[]
+  > = new Map()
 
   subscribe(
     channel: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     handler: (msg: unknown) => Effect<any, any, void>,
     tskId: TaskId,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    callbacks: Callbacks<any, any, any>,
   ): void {
     if (!this.channels.has(channel)) this.channels.set(channel, [])
-    this.channels.get(channel)!.push({ handler, taskId: tskId })
+    this.channels.get(channel)!.push({ handler, taskId: tskId, callbacks })
   }
 
   unsubscribe(tskId: TaskId): void {
@@ -244,22 +257,25 @@ class BroadcastChannelRegistry {
     broadcastReg: BroadcastChannelRegistry,
     scheduler: TestScheduler,
     window: RealWindow,
+    config?: TestConfig,
   ): void {
     const subs = this.channels.get(channel) ?? []
     for (const sub of subs) {
+      // Reuse the subscriber's own callbacks (real getState/setState bound to
+      // its component), matching the production interpreter's behavior --
+      // only overriding onComplete, since the handler's own result is discarded.
       testingInterpreter(
         sub.handler(message),
         {
+          ...sub.callbacks,
           onComplete() {},
-          onFireEvent() {},
-          getState() { return undefined as unknown },
-          setState() {},
         },
         new TaskRegistry(),
         acc,
         broadcastReg,
         scheduler,
         window,
+        config,
       )
     }
   }
@@ -344,9 +360,9 @@ export function makeTestingInterpreter<Custom = {}>(
   return {
     interpreter,
     getData: () => snapshotTestData(acc),
-    advanceTime: (ms: number) => scheduler.advance(ms, acc, broadcastReg, window),
+    advanceTime: (ms: number) => scheduler.advance(ms, acc, broadcastReg, window, config),
     fireBroadcast: (channel: string, message: unknown) =>
-      broadcastReg.deliver(channel, message, acc, broadcastReg, scheduler, window),
+      broadcastReg.deliver(channel, message, acc, broadcastReg, scheduler, window, config),
   }
 }
 
@@ -507,7 +523,7 @@ function testingInterpreter<State, Event, A, Custom>(
           if (tskIdInput) {
             broadcastReg.unsubscribe(tskIdInput)
           }
-          broadcastReg.subscribe(channel, handler, tskId)
+          broadcastReg.subscribe(channel, handler, tskId, callbacks)
           callbacks.onComplete(tskId as A)
           return
         }
@@ -562,8 +578,27 @@ function testingInterpreter<State, Event, A, Custom>(
           return
         }
         case 'MakeHttpRequest': {
-          // TODO: add HTTP mock support for testing
-          callbacks.onComplete(undefined as A)
+          const request: HttpRequest = effect.operation.input
+          const handler =
+            config?.http.handler ??
+            (() => {
+              throw new Error('No HTTP handler configured in TestConfig.')
+            })
+          let result: Result<HttpResponse, RequestError | HttpError>
+          try {
+            result = handler(request, acc.http.interactions)
+          } catch (err) {
+            result = failure({
+              _type: 'RequestError',
+              cause: 'UnexpectedError',
+              message:
+                err instanceof Error
+                  ? err.message
+                  : `Unexpected request error: ${err}`,
+            })
+          }
+          acc.http.interactions.push({ request, response: result })
+          callbacks.onComplete(result as A)
           return
         }
         case 'Product': {

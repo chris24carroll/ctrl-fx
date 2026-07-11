@@ -29,6 +29,7 @@ export function makeHttpRequest(
             if (ab) {
               callback(
                 success({
+                  status: response.status,
                   headers: convertHeaders(response.headers),
                   body: new ResponseBody(ab),
                 }),
