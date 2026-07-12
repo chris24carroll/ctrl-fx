@@ -162,8 +162,7 @@ export interface NonVoidElement<
 }
 
 export type ButtonContent<State, Event> =
-  | NonVoidInlineElement<State, Event>
-  | string
+  | PhrasingContent<State, Event>
   | Svg<State, Event>
 
 export type Button<State, Event> = NonVoidElement<
