@@ -618,21 +618,22 @@ export function updateAttrs(
   node: InternalElementNode,
   newAttrs: readonly Attr[],
 ) {
+  const oldAttrsMap = new Map(node.attrs.map(a => [a.name, a]))
   const newAttrsMap = new Map(newAttrs.map(a => [a.name, a]))
 
   node.attrs.forEach(oldAttr => {
-    const newAttr = newAttrsMap.get(oldAttr.name)
-    if (newAttr) {
-      if (newAttr.value || oldAttr.value) {
-        if (newAttr.value !== oldAttr.value) {
-          node.realNode.setAttribute(
-            newAttr.name,
-            newAttr.value ? newAttr.value : '',
-          )
-        }
-      }
-    } else {
+    if (!newAttrsMap.has(oldAttr.name)) {
       node.realNode.removeAttribute(oldAttr.name)
+    }
+  })
+
+  newAttrs.forEach(newAttr => {
+    const oldAttr = oldAttrsMap.get(newAttr.name)
+    if (!oldAttr || newAttr.value !== oldAttr.value) {
+      node.realNode.setAttribute(
+        newAttr.name,
+        newAttr.value ? newAttr.value : '',
+      )
     }
   })
 
