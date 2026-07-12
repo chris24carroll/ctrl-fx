@@ -1,6 +1,6 @@
 {
   "name": "ctrl-fx",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "A no-dependency, purely functional TypeScript framework for building web applications",
   "type": "module",
   "license": "Apache-2.0",
