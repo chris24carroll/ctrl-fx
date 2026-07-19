@@ -12,7 +12,6 @@ export function makeHttpRequest(
   request: HttpRequest,
   callback: (result: Result<HttpResponse, RequestError | HttpError>) => void,
 ): void {
-  console.log('About to fetch ' + request.uri)
   globalThis
     .fetch(request.uri, {
       method: request.method,
