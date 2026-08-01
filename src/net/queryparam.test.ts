@@ -93,3 +93,24 @@ describe('findQueryParam', () => {
     expect(found?.value).toBeUndefined()
   })
 })
+
+describe('percent-decoding', () => {
+  it('decodes encoded values (e.g. an OAuth code with %2F)', () => {
+    const qp = parseQueryParam('code=4%2F0AVGxyz%3D%3D')
+    expect(qp.value).toBe('4/0AVGxyz==')
+    expect(qp.format).toBe('code=4%2F0AVGxyz%3D%3D')
+  })
+
+  it('decodes encoded names', () => {
+    const qp = parseQueryParam('a%20b=c')
+    expect(qp.name).toBe('a b')
+  })
+
+  it('leaves + alone -- form-submission space convention does not apply here', () => {
+    expect(parseQueryParam('scope=openid+email').value).toBe('openid+email')
+  })
+
+  it('falls back to the raw text on malformed encoding rather than throwing', () => {
+    expect(parseQueryParam('x=%zz').value).toBe('%zz')
+  })
+})

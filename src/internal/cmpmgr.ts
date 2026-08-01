@@ -447,7 +447,13 @@ export class ComponentManager {
 
         updateAttrs(oldNode, elem.attrs);
         updateProps(oldNode, elem.props);
-        if (oldNode.eventListeners.length > 0) {
+        // Both sides, like onVoidElement above: a reused element gaining its
+        // first listener needs setElementListeners just as much as one
+        // changing or losing them. Only skip when neither side has any.
+        if (
+          oldNode.eventListeners.length > 0 ||
+          elem.eventListeners.length > 0
+        ) {
           oldNode.eventListeners = elem.eventListeners;
           that.eventManager.setElementListeners(oldNode);
         }

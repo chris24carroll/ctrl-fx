@@ -8,7 +8,7 @@ type State = { mountCount: number; clicks: number; showChild: boolean }
 
 const dom = makeDom<State, never>()
 const fx = makeEffects<State, never>()
-const { _, div_, section_, button_ } = dom
+const { _, div, div_, section_, button_ } = dom
 
 describe('onRender', () => {
   it('runs once at initial mount', () => {
@@ -89,6 +89,27 @@ describe('onRender', () => {
 
     const tc = testApplication(app, { mountCount: 0, clicks: 0, showChild: false })
     expect(tc.state.mountCount).toBe(1)
+  })
+})
+
+describe('element reuse across renders', () => {
+  it('attaches listeners when a reused element goes from no listeners to some', () => {
+    // Regression test: compareNodes reuses a same-tag element in place, but
+    // onNonVoidElement only refreshed listeners when the OLD node already had
+    // some -- an element gaining its first listener on a re-render (here the
+    // second div, once showChild flips) stayed listener-less forever.
+    const app = (state: State) =>
+      _(
+        button_('toggle').onClick(fx.updateState(s => ({ ...s, showChild: true }))),
+        state.showChild
+          ? div(['class', 'armed'])('target').onClick(fx.updateState(s => ({ ...s, clicks: s.clicks + 1 })))
+          : div_('target'),
+      )
+
+    const tc = testApplication(app, { mountCount: 0, clicks: 0, showChild: false })
+    const after = tc.run(click(one('button')), click(one('div.armed')))
+    expect(after.state.showChild).toBe(true)
+    expect(after.state.clicks).toBe(1)
   })
 })
 

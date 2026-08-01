@@ -390,6 +390,10 @@ class TouchCancelEvent extends TouchEvent {
 abstract class KeyEvent extends Event {
   key: string
   code: string
+  shiftKey = false
+  ctrlKey = false
+  altKey = false
+  metaKey = false
 
   constructor(
     type: string,

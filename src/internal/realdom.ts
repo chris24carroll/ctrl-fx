@@ -125,6 +125,10 @@ export type RealKeyUpEvent = {
   type: 'keyup'
   key: string
   code: string
+  shiftKey: boolean
+  ctrlKey: boolean
+  altKey: boolean
+  metaKey: boolean
   target: RealEventTarget | null
   preventDefault(): void
   stopImmediatePropagation(): void
@@ -134,6 +138,10 @@ export type RealKeyDownEvent = {
   type: 'keydown'
   key: string
   code: string
+  shiftKey: boolean
+  ctrlKey: boolean
+  altKey: boolean
+  metaKey: boolean
   target: RealEventTarget | null
   preventDefault(): void
   stopImmediatePropagation(): void
@@ -143,6 +151,10 @@ export type RealKeyPressEvent = {
   type: 'keypress'
   key: string
   code: string
+  shiftKey: boolean
+  ctrlKey: boolean
+  altKey: boolean
+  metaKey: boolean
   target: RealEventTarget | null
   preventDefault(): void
   stopImmediatePropagation(): void

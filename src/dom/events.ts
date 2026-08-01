@@ -43,6 +43,11 @@ export type TextInputListener<State, Event> = {
 export type KeyData = {
   key: string
   code: string
+  /** Modifier state at the moment of the keystroke -- e.g. distinguishing Enter (send) from Shift+Enter (newline) in chat composers. */
+  shiftKey: boolean
+  ctrlKey: boolean
+  altKey: boolean
+  metaKey: boolean
 }
 
 export type KeyDownListener<State, Event> = {

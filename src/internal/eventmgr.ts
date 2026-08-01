@@ -401,7 +401,14 @@ abstract class EventManagerDelegate {
       case 'keydown':
       case 'keyup': {
         assertKeyEvent(ev)
-        const keyData = { key: ev.key, code: ev.code }
+        const keyData = {
+          key: ev.key,
+          code: ev.code,
+          shiftKey: ev.shiftKey,
+          ctrlKey: ev.ctrlKey,
+          altKey: ev.altKey,
+          metaKey: ev.metaKey,
+        }
         effect = listener.effect(keyData)
         break
       }
